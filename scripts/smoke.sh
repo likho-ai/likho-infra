@@ -39,7 +39,17 @@ after="$(nats stream info LIKHO --json | grep -o '"messages": *[0-9]*' | head -1
 
 echo "object store"
 buckets="$(echo 's3.bucket.list' | docker compose exec -T objectstore weed shell -master=127.0.0.1:9333 2>/dev/null)"
-for b in likho-audio likho-normalized likho-peaks likho-models; do echo "$buckets" | grep -q "$b" && pass "bucket $b" || fail "bucket $b"; done
+# Write, read and remove an object in every bucket. A bucket that exists but cannot be written
+# to (the store out of volumes) makes a service hang, so existing is not enough.
+s3() { curl -s --max-time 15 --aws-sigv4 "aws:amz:us-east-1:s3" --user "likho-dev:likho-dev-secret" "$@"; }
+for b in likho-audio likho-normalized likho-peaks likho-models; do
+  if ! echo "$buckets" | grep -q "$b"; then fail "bucket $b"; continue; fi
+  object="http://localhost:${S3_PORT}/${b}/smoke/check-$$.txt"
+  put="$(s3 -o /dev/null -w '%{http_code}' -X PUT --data-binary "likho smoke $b" "$object")"
+  got="$(s3 "$object")"
+  s3 -o /dev/null -X DELETE "$object"
+  [ "$put" = "200" ] && [ "$got" = "likho smoke $b" ] && pass "bucket $b: write and read" || fail "bucket $b: write and read (PUT $put)"
+done
 [ "$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${S3_PORT}/likho-audio/nothing")" = "403" ] && pass "anonymous read is refused" || fail "anonymous S3 access"
 
 echo "meilisearch"

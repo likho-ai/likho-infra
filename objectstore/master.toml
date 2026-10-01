@@ -1,0 +1,11 @@
+# SeaweedFS master settings for the local stack.
+#
+# Every bucket is its own collection of volumes. By default SeaweedFS reserves 7 volumes for
+# a collection the first time something is written to it, which uses up a small store after
+# two buckets: writes to the third then hang. One volume at a time is enough here; another
+# is added when a volume is full.
+[master.volume_growth]
+copy_1 = 1
+copy_2 = 2
+copy_3 = 3
+copy_other = 1
