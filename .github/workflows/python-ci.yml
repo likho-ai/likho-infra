@@ -1,0 +1,23 @@
+# Reusable CI for Python repositories (likho-transcription, likho-language).
+# Caller:   jobs: { ci: { uses: likho-ai/likho-infra/.github/workflows/python-ci.yml@main } }
+name: python-ci
+
+on:
+  workflow_call:
+    inputs:
+      python-version: { type: string, default: "3.12" }
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest

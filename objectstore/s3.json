@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "likho-dev",
+      "credentials": [{ "accessKey": "likho-dev", "secretKey": "likho-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

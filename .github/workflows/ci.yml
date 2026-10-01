@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  stack:
+    name: Start the stack and run the smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose file
+        run: docker compose --profile infra --profile obs config --quiet
+      - name: Start
+        run: docker compose --profile infra up -d --wait
+      - name: Smoke test
+        run: bash scripts/smoke.sh
+      - name: Logs on failure
+        if: failure()
+        run: docker compose --profile infra logs --tail 80

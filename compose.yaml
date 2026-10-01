@@ -1,0 +1,158 @@
+# Likho local stack.
+#
+#   docker compose --profile infra up -d --wait     databases, event bus, object store, search, gateway
+#   docker compose --profile obs   up -d            Grafana + logs + traces + metrics (about 1 GB of RAM)
+#
+# Host ports come from .env (see .env.example); defaults avoid 80, 5432 and 6379,
+# which IIS, a local PostgreSQL and a local Redis already use on the development machine.
+name: likho
+
+x-infra: &infra
+  profiles: [infra, core, platform]
+  restart: unless-stopped
+  networks: [likho]
+
+services:
+  gateway:
+    <<: *infra
+    image: nginx:1.30.5-alpine
+    ports: ["${GATEWAY_PORT:-8080}:80"]
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 64m
+
+  postgres:
+    <<: *infra
+    image: postgres:17.11-alpine
+    ports: ["${POSTGRES_PORT:-5433}:5432"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-likho-dev}
+    volumes:
+      - pg:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+
+  mongo:
+    <<: *infra
+    image: mongo:8.0.32
+    ports: ["${MONGO_PORT:-27017}:27017"]
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    mem_limit: 768m
+
+  redis:
+    <<: *infra
+    image: redis:8.10.2-alpine
+    ports: ["${REDIS_PORT:-6380}:6379"]
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 128m
+
+  nats:
+    <<: *infra
+    image: nats:2.14.7-alpine
+    ports: ["${NATS_PORT:-4222}:4222", "${NATS_MONITOR_PORT:-8222}:8222"]
+    command: ["-js", "-sd", "/data", "-m", "8222", "-n", "likho-dev"]
+    volumes:
+      - nats:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 256m
+
+  objectstore:
+    <<: *infra
+    image: chrislusf/seaweedfs:4.48
+    ports: ["${S3_PORT:-9000}:8333"]
+    command: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-s3.config=/etc/seaweedfs/s3.json", "-volume.max=20", "-master.volumeSizeLimitMB=256"]
+    volumes:
+      - objects:/data
+      - ./objectstore/s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9333/cluster/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 384m
+
+  meilisearch:
+    <<: *infra
+    image: getmeili/meilisearch:v1.54.2
+    ports: ["${MEILI_PORT:-7700}:7700"]
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-likho-dev-master-key}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://127.0.0.1:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 512m
+
+  # One-shot jobs: create the event streams and the buckets, then exit.
+  init-nats:
+    profiles: [infra, core, platform]
+    image: natsio/nats-box:0.20.0
+    networks: [likho]
+    depends_on:
+      nats: { condition: service_healthy }
+    volumes:
+      - ./nats/streams.sh:/streams.sh:ro
+    entrypoint: ["sh", "/streams.sh"]
+    restart: "no"
+
+  init-objectstore:
+    profiles: [infra, core, platform]
+    image: chrislusf/seaweedfs:4.48
+    networks: [likho]
+    depends_on:
+      objectstore: { condition: service_healthy }
+    volumes:
+      - ./objectstore/buckets.sh:/buckets.sh:ro
+    entrypoint: ["sh", "/buckets.sh"]
+    restart: "no"
+
+  otel-lgtm:
+    profiles: [obs, platform]
+    image: grafana/otel-lgtm:0.34.0
+    ports: ["${GRAFANA_PORT:-3000}:3000", "4317:4317", "4318:4318"]
+    networks: [likho]
+    restart: unless-stopped
+    mem_limit: 1200m
+
+networks:
+  likho:
+    name: likho
+
+volumes:
+  pg:
+  mongo:
+  nats:
+  objects:
+  meili:

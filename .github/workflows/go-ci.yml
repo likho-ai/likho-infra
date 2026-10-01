@@ -1,0 +1,21 @@
+# Reusable CI for Go repositories (likho-media, likho-search).
+# Caller:   jobs: { ci: { uses: likho-ai/likho-infra/.github/workflows/go-ci.yml@main } }
+name: go-ci
+
+on:
+  workflow_call:
+    inputs:
+      go-version-file: { type: string, default: "go.mod" }
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ inputs.go-version-file }}
+      - run: go vet ./...
+      - uses: golangci/golangci-lint-action@v6
+      - run: go test -race ./...
+      - run: go build ./...
