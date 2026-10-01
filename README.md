@@ -19,7 +19,7 @@ Docker Desktop must be running.
 .\stack.ps1 down       # stop, keep the data
 ```
 
-On Linux or macOS: `docker compose --profile infra up -d --wait` and `bash scripts/smoke.sh`.
+On Linux or macOS: `bash scripts/up.sh` and `bash scripts/smoke.sh`.
 
 ## What runs
 

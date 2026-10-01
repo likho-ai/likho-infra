@@ -14,7 +14,7 @@ jobs:
       - name: Validate compose file
         run: docker compose --profile infra --profile obs config --quiet
       - name: Start
-        run: docker compose --profile infra up -d --wait
+        run: bash scripts/up.sh
       - name: Smoke test
         run: bash scripts/smoke.sh
       - name: Logs on failure
