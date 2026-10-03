@@ -18,6 +18,8 @@ param(
 # as output is redirected, so failures are detected from exit codes instead.
 $ErrorActionPreference = 'Continue'
 Set-Location $PSScriptRoot
+# The stack's settings: .env.development (committed) and, if it exists, .env.development.local.
+$env:COMPOSE_ENV_FILES = if (Test-Path '.env.development.local') { '.env.development,.env.development.local' } else { '.env.development' }
 
 function Start-Stack([string[]]$Profiles) {
   # Long-running services first; "up --wait" fails if a one-shot job exits, so those run afterwards.

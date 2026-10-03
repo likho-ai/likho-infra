@@ -4,6 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# The stack's settings: .env.development (committed) and, if it exists, .env.development.local.
+export COMPOSE_ENV_FILES=".env.development$( [ -f .env.development.local ] && echo ',.env.development.local' )"
+
 GATEWAY_PORT="${GATEWAY_PORT:-8080}"
 MEILI_PORT="${MEILI_PORT:-7700}"
 S3_PORT="${S3_PORT:-9000}"

@@ -4,7 +4,7 @@
 #                                                   then the one-shot jobs that create streams and buckets
 #   docker compose --profile obs   up -d            Grafana + logs + traces + metrics (about 1 GB of RAM)
 #
-# Host ports come from .env (see .env.example); defaults avoid 80, 5432 and 6379,
+# Host ports come from .env.development (and .env.development.local); defaults avoid 80, 5432 and 6379,
 # which IIS, a local PostgreSQL and a local Redis already use on the development machine.
 name: likho
 

@@ -4,6 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# The stack's settings: .env.development (committed) and, if it exists, .env.development.local.
+export COMPOSE_ENV_FILES=".env.development$( [ -f .env.development.local ] && echo ',.env.development.local' )"
+
 docker compose --profile infra up -d --wait
 docker compose --profile infra --profile init run --rm init-nats
 docker compose --profile infra --profile init run --rm init-objectstore

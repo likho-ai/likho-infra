@@ -39,7 +39,7 @@ The observability container adds about 1 GB, so it is a separate profile.
 
 Ports 8080, 5433 and 6380 are used instead of 80, 5432 and 6379 because IIS, a local
 PostgreSQL and a local Redis already hold those on the development machine. Change any port
-in `.env` (copy `.env.example`).
+in `.env.development.local` (same keys as `.env.development`).
 
 ## Local credentials
 
@@ -52,7 +52,7 @@ Development values only, valid on this machine only.
 | S3 | access key `likho-dev`, secret `likho-dev-secret`, path-style addressing, any region |
 | Meilisearch master key | `likho-dev-master-key` |
 
-Connection strings for a service's `.env`:
+Connection strings as the services' `.env.development` files have them:
 
 ```
 DATABASE_URL=postgres://likho_api:likho_api@localhost:5433/likho_api

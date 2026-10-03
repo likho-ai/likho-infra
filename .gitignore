@@ -1,1 +1,5 @@
+
+# Personal and secret settings on this machine; never committed.
 .env
+.env.local
+.env.*.local
