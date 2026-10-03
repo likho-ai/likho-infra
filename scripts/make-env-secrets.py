@@ -10,6 +10,7 @@ Writes, next to this repository (the D:\\likho layout):
     likho-media/.env.<env>.local            DATABASE_URL, S3 keys, LINK_SECRET, PUBLIC_URL
     likho-transcription/.env.<env>.local    MONGO_URL
     likho-api/.env.<env>.local              DATABASE_URL, SESSION_SECRET, the first admin, PUBLIC_ORIGIN
+    likho-connector-ameyo/.env.<env>.local  DATABASE_URL, and placeholders for the API key and the dialer
 
 The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
 there); its stack chart creates the database users with these passwords on first start. Two values cannot be invented and are
@@ -36,7 +37,7 @@ def main() -> int:
     force = "--force" in sys.argv
     files = {
         repo: ROOT / repo / f".env.{env}.local"
-        for repo in ("likho-infra", "likho-language", "likho-media", "likho-transcription", "likho-api")
+        for repo in ("likho-infra", "likho-language", "likho-media", "likho-transcription", "likho-api", "likho-connector-ameyo")
     }
     existing = [p for p in files.values() if p.exists()]
     if existing and not force:
@@ -50,6 +51,7 @@ def main() -> int:
         "LIKHO_API_DB_PASSWORD": token(24),
         "LIKHO_MEDIA_DB_PASSWORD": token(24),
         "LIKHO_LANGUAGE_DB_PASSWORD": token(24),
+        "LIKHO_CONNECTOR_DB_PASSWORD": token(24),
         "MONGO_ROOT_PASSWORD": token(24),
         "MONGO_PASSWORD": token(24),
         "S3_ACCESS_KEY": "likho-" + env,
@@ -97,9 +99,29 @@ def main() -> int:
         encoding="utf-8",
         newline="\n",
     )
+    files["likho-connector-ameyo"].write_text(
+        head
+        + f"DATABASE_URL=postgres://likho_connector:{values['LIKHO_CONNECTOR_DB_PASSWORD']}@postgres:5432/likho_connector\n"
+        + "# The workspace's API key (Settings -> API keys in the web app) and its id:\n"
+        + "LIKHO_API_KEY=CHANGE-ME\n"
+        + "WORKSPACE_ID=CHANGE-ME\n"
+        + "# The dialer's voice-log API and its credentials (the company's; never committed):\n"
+        + "AMEYO_VOICELOG_URL=CHANGE-ME\n"
+        + "AMEYO_HASH_KEY=CHANGE-ME\n"
+        + "AMEYO_POLICY_NAME=CHANGE-ME\n"
+        + "AMEYO_REQUESTING_HOST=CHANGE-ME\n"
+        + "# Optional: the dialer's reporting database (read only) and the CRM, with the real queries:\n"
+        + "# DIALER_DATABASE_URL=postgres://user:password@host:5432/dialer\n"
+        + "# CALLS_QUERY_FILE=queries/calls.local.sql\n"
+        + "# CALL_QUERY_FILE=queries/call.local.sql\n"
+        + "# CRM_DATABASE_URL=Server=host,1433;Database=crm;User Id=user;Password=password;Encrypt=false\n"
+        + "# WRITEBACK_QUERY_FILE=queries/writeback.local.sql\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     for path in files.values():
         print(f"wrote {path}")
-    print("fill in: PUBLIC_DOMAIN / PUBLIC_URL / PUBLIC_ORIGIN (the domain) and BOOTSTRAP_ADMIN_EMAIL")
+    print("fill in: PUBLIC_DOMAIN / PUBLIC_URL / PUBLIC_ORIGIN (the domain), BOOTSTRAP_ADMIN_EMAIL, and the connector's API key and dialer values")
     return 0
 
 
