@@ -11,8 +11,8 @@ Writes, next to this repository (the D:\\likho layout):
     likho-transcription/.env.<env>.local    MONGO_URL
     likho-api/.env.<env>.local              DATABASE_URL, SESSION_SECRET, the first admin, PUBLIC_ORIGIN
 
-The files are ignored by git. likho-deploy turns the likho-infra file into Kubernetes Secrets
-and creates the database users with the same passwords. Two values cannot be invented and are
+The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
+there); its stack chart creates the database users with these passwords on first start. Two values cannot be invented and are
 left for you to fill: the public domain (PUBLIC_URL / PUBLIC_ORIGIN) and the first admin's email.
 """
 
@@ -50,6 +50,7 @@ def main() -> int:
         "LIKHO_API_DB_PASSWORD": token(24),
         "LIKHO_MEDIA_DB_PASSWORD": token(24),
         "LIKHO_LANGUAGE_DB_PASSWORD": token(24),
+        "MONGO_ROOT_PASSWORD": token(24),
         "MONGO_PASSWORD": token(24),
         "S3_ACCESS_KEY": "likho-" + env,
         "S3_SECRET_KEY": token(32),
