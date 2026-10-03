@@ -1,5 +1,10 @@
 # Reusable CI for TypeScript repositories (likho-api, web apps, likho-ui, likho-web-sdk).
-# Caller:   jobs: { ci: { uses: likho-ai/likho-infra/.github/workflows/node-ci.yml@main } }
+# Caller:
+#   jobs:
+#     ci:
+#       uses: likho-ai/likho-infra/.github/workflows/node-ci.yml@main
+#       with:
+#         stack-services: "postgres nats redis"   # optional: started from likho-infra before the tests
 name: node-ci
 
 on:
@@ -8,6 +13,9 @@ on:
       node-version: { type: string, default: "24" }
       working-directory: { type: string, default: "." }
       run-build: { type: boolean, default: true }
+      # Space-separated services of the likho-infra stack the tests need.
+      # When set, LIKHO_REQUIRE_STACK=1 makes integration tests fail instead of being skipped.
+      stack-services: { type: string, default: "" }
 
 jobs:
   ci:
@@ -17,6 +25,14 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
+      - name: Start services from likho-infra
+        if: ${{ inputs.stack-services != '' }}
+        run: |
+          git clone --depth 1 https://github.com/likho-ai/likho-infra.git "$RUNNER_TEMP/likho-infra"
+          cd "$RUNNER_TEMP/likho-infra"
+          docker compose --profile infra up -d --wait ${{ inputs.stack-services }}
+          case " ${{ inputs.stack-services }} " in *" nats "*) docker compose --profile infra --profile init run --rm init-nats ;; esac
+          case " ${{ inputs.stack-services }} " in *" objectstore "*) docker compose --profile infra --profile init run --rm init-objectstore ;; esac
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -26,5 +42,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+        env:
+          LIKHO_REQUIRE_STACK: ${{ inputs.stack-services != '' && '1' || '0' }}
       - if: ${{ inputs.run-build }}
         run: pnpm build
