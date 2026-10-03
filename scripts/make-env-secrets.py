@@ -10,6 +10,7 @@ Writes, next to this repository (the D:\\likho layout):
     likho-media/.env.<env>.local            DATABASE_URL, S3 keys, LINK_SECRET, PUBLIC_URL
     likho-transcription/.env.<env>.local    MONGO_URL
     likho-api/.env.<env>.local              DATABASE_URL, SESSION_SECRET, the first admin, PUBLIC_ORIGIN
+    likho-search/.env.<env>.local           MEILI_API_KEY
     likho-connector-ameyo/.env.<env>.local  DATABASE_URL, and placeholders for the API key and the dialer
 
 The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
@@ -37,7 +38,7 @@ def main() -> int:
     force = "--force" in sys.argv
     files = {
         repo: ROOT / repo / f".env.{env}.local"
-        for repo in ("likho-infra", "likho-language", "likho-media", "likho-transcription", "likho-api", "likho-connector-ameyo")
+        for repo in ("likho-infra", "likho-language", "likho-media", "likho-transcription", "likho-api", "likho-search", "likho-connector-ameyo")
     }
     existing = [p for p in files.values() if p.exists()]
     if existing and not force:
@@ -98,6 +99,9 @@ def main() -> int:
         + f"PUBLIC_ORIGIN=https://{values['PUBLIC_DOMAIN']}\n",
         encoding="utf-8",
         newline="\n",
+    )
+    files["likho-search"].write_text(
+        head + f"MEILI_API_KEY={values['MEILI_MASTER_KEY']}\n", encoding="utf-8", newline="\n"
     )
     files["likho-connector-ameyo"].write_text(
         head
