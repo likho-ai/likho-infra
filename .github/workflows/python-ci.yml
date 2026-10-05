@@ -1,4 +1,4 @@
-# Reusable CI for Python repositories (likho-transcription, likho-language).
+# Reusable CI for Python repositories (likho-transcription, likho-language, likho-insights).
 # Caller:
 #   jobs:
 #     ci:

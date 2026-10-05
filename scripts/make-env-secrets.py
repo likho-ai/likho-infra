@@ -12,6 +12,7 @@ Writes, next to this repository (the D:\\likho layout):
     likho-api/.env.<env>.local              DATABASE_URL, SESSION_SECRET, the first admin, PUBLIC_ORIGIN
     likho-search/.env.<env>.local           MEILI_API_KEY
     likho-connector-ameyo/.env.<env>.local  DATABASE_URL, and placeholders for the API key and the dialer
+    likho-insights/.env.<env>.local         MONGO_URL, and a placeholder for the model's key (empty = insights off)
 
 The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
 there); its stack chart creates the database users with these passwords on first start. Two values cannot be invented and are
@@ -38,7 +39,16 @@ def main() -> int:
     force = "--force" in sys.argv
     files = {
         repo: ROOT / repo / f".env.{env}.local"
-        for repo in ("likho-infra", "likho-language", "likho-media", "likho-transcription", "likho-api", "likho-search", "likho-connector-ameyo")
+        for repo in (
+            "likho-infra",
+            "likho-language",
+            "likho-media",
+            "likho-transcription",
+            "likho-api",
+            "likho-search",
+            "likho-connector-ameyo",
+            "likho-insights",
+        )
     }
     existing = [p for p in files.values() if p.exists()]
     if existing and not force:
@@ -127,9 +137,21 @@ def main() -> int:
         encoding="utf-8",
         newline="\n",
     )
+    files["likho-insights"].write_text(
+        head
+        + f"MONGO_URL=mongodb://likho_insights:{values['MONGO_PASSWORD']}@mongo:27017/likho_insights?authSource=admin\n"
+        + "# The model's key. Empty: nothing is analysed and no transcript text leaves. Fill it in only once the\n"
+        + "# company has said yes to sending transcripts to the model's provider.\n"
+        + "ANTHROPIC_API_KEY=\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     for path in files.values():
         print(f"wrote {path}")
-    print("fill in: PUBLIC_DOMAIN / PUBLIC_URL / PUBLIC_ORIGIN (the domain), BOOTSTRAP_ADMIN_EMAIL, and the connector's API key and dialer values")
+    print(
+        "fill in: PUBLIC_DOMAIN / PUBLIC_URL / PUBLIC_ORIGIN (the domain), BOOTSTRAP_ADMIN_EMAIL, the connector's API key "
+        "and dialer values, and ANTHROPIC_API_KEY once transcripts may go to the model"
+    )
     return 0
 
 

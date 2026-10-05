@@ -27,7 +27,7 @@ On Linux or macOS: `bash scripts/up.sh` and `bash scripts/smoke.sh`.
 | --- | --- | --- | --- |
 | Gateway | nginx 1.30 | http://localhost:8080 | the browser; routes to services running on the host |
 | PostgreSQL | postgres 17 | localhost:5433 | likho-api, likho-media, likho-language (one database and login each) |
-| MongoDB | mongo 8.0 | localhost:27017 | likho-transcription (transcript documents) |
+| MongoDB | mongo 8.0 | localhost:27017 | likho-transcription (transcript documents), likho-insights (what the model said about each call) |
 | Redis | redis 8 | localhost:6380 | likho-api (sessions, live lines) |
 | NATS JetStream | nats 2.14 | nats://localhost:4222, monitor http://localhost:8222 | every service (events and the job queue) |
 | Object store | SeaweedFS 4.48 (S3 API) | http://localhost:9000 | likho-media (audio, 16 kHz copies, waveforms) |
