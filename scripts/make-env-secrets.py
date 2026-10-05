@@ -96,7 +96,11 @@ def main() -> int:
         + f"SESSION_SECRET={values['SESSION_SECRET']}\n"
         + f"BOOTSTRAP_ADMIN_EMAIL={values['BOOTSTRAP_ADMIN_EMAIL']}\n"
         + f"BOOTSTRAP_ADMIN_PASSWORD={values['BOOTSTRAP_ADMIN_PASSWORD']}\n"
-        + f"PUBLIC_ORIGIN=https://{values['PUBLIC_DOMAIN']}\n",
+        + f"PUBLIC_ORIGIN=https://{values['PUBLIC_DOMAIN']}\n"
+        + "# Mail for invitations and password resets. Empty: admins pass invitation links on by hand.\n"
+        + "# e.g. smtp://user:password@smtp.example.com:587 (STARTTLS) or smtps://...:465\n"
+        + "SMTP_URL=\n"
+        + f"MAIL_FROM=Likho <no-reply@{values['PUBLIC_DOMAIN']}>\n",
         encoding="utf-8",
         newline="\n",
     )
