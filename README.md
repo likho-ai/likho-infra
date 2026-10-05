@@ -32,6 +32,7 @@ On Linux or macOS: `bash scripts/up.sh` and `bash scripts/smoke.sh`.
 | NATS JetStream | nats 2.14 | nats://localhost:4222, monitor http://localhost:8222 | every service (events and the job queue) |
 | Object store | SeaweedFS 4.48 (S3 API) | http://localhost:9000 | likho-media (audio, 16 kHz copies, waveforms) |
 | Meilisearch | 1.54 | http://localhost:7700 | likho-search |
+| ClickHouse | 25.8 | http://localhost:8123 (native 9100) | likho-analytics (every event, and the numbers behind the calls) |
 | Grafana, logs, traces, metrics (`.\stack.ps1 obs`) | grafana/otel-lgtm 0.34 | http://localhost:3000, OTLP 4317 / 4318 | every service |
 
 Measured on 2026-10-01: the seven always-on containers use about **300 MB** of memory when idle.
@@ -56,6 +57,7 @@ Development values only, valid on this machine only.
 | PostgreSQL superuser | `postgres` / `likho-dev` |
 | S3 | access key `likho-dev`, secret `likho-dev-secret`, path-style addressing, any region |
 | Meilisearch master key | `likho-dev-master-key` |
+| ClickHouse | user = database = password: `likho_analytics` |
 
 Connection strings as the services' `.env.development` files have them:
 
@@ -66,6 +68,7 @@ REDIS_URL=redis://localhost:6380
 NATS_URL=nats://localhost:4222
 S3_ENDPOINT=http://localhost:9000
 MEILI_URL=http://localhost:7700
+CLICKHOUSE_URL=http://likho_analytics:likho_analytics@localhost:8123/likho_analytics
 ```
 
 ## Event streams

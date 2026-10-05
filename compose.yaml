@@ -118,6 +118,32 @@ services:
       retries: 12
     mem_limit: 512m
 
+  # ClickHouse: every event of the platform, and the numbers likho-analytics answers from them.
+  # HTTP on 8123 (what the service uses); the native port is published on 9100 because the
+  # object store already has 9000. Held to about 1 GB of memory (clickhouse/config.d/likho.xml).
+  clickhouse:
+    <<: *infra
+    image: clickhouse/clickhouse-server:25.8-alpine
+    ports: ["${CLICKHOUSE_PORT:-8123}:8123", "${CLICKHOUSE_NATIVE_PORT:-9100}:9000"]
+    environment:
+      CLICKHOUSE_USER: likho_analytics
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-likho_analytics}
+      CLICKHOUSE_DB: likho_analytics
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - clickhouse:/var/lib/clickhouse
+      # One file beside the image's own config.d (mounting the directory would hide the file that
+      # makes the server listen on every interface).
+      - ./clickhouse/config.d/likho.xml:/etc/clickhouse-server/config.d/likho.xml:ro
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 1200m
+
   # One-shot jobs: create the event streams and the buckets, then exit. They are in their own
   # profile and run with "docker compose run", because "up --wait" reports a container that
   # exits, even successfully, as a failure.
@@ -167,3 +193,4 @@ volumes:
   nats:
   objects:
   meili:
+  clickhouse:

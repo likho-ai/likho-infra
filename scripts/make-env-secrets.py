@@ -13,6 +13,7 @@ Writes, next to this repository (the D:\\likho layout):
     likho-search/.env.<env>.local           MEILI_API_KEY
     likho-connector-ameyo/.env.<env>.local  DATABASE_URL, and placeholders for the API key and the dialer
     likho-insights/.env.<env>.local         MONGO_URL, and a placeholder for the model's key (empty = insights off)
+    likho-analytics/.env.<env>.local        CLICKHOUSE_URL
 
 The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
 there); its stack chart creates the database users with these passwords on first start. Two values cannot be invented and are
@@ -48,6 +49,7 @@ def main() -> int:
             "likho-search",
             "likho-connector-ameyo",
             "likho-insights",
+            "likho-analytics",
         )
     }
     existing = [p for p in files.values() if p.exists()]
@@ -68,6 +70,7 @@ def main() -> int:
         "S3_ACCESS_KEY": "likho-" + env,
         "S3_SECRET_KEY": token(32),
         "MEILI_MASTER_KEY": token(32),
+        "CLICKHOUSE_PASSWORD": token(24),
         "LINK_SECRET": token(48),
         "SESSION_SECRET": token(48),
         "BOOTSTRAP_ADMIN_PASSWORD": token(18),
@@ -143,6 +146,11 @@ def main() -> int:
         + "# The model's key. Empty: nothing is analysed and no transcript text leaves. Fill it in only once the\n"
         + "# company has said yes to sending transcripts to the model's provider.\n"
         + "ANTHROPIC_API_KEY=\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    files["likho-analytics"].write_text(
+        head + f"CLICKHOUSE_URL=http://likho_analytics:{values['CLICKHOUSE_PASSWORD']}@clickhouse:8123/likho_analytics\n",
         encoding="utf-8",
         newline="\n",
     )
