@@ -1,5 +1,6 @@
 {
   "library": "/mfe/library/remoteEntry.js",
   "transcript": "/mfe/transcript/remoteEntry.js",
-  "admin": "/mfe/admin/remoteEntry.js"
+  "admin": "/mfe/admin/remoteEntry.js",
+  "vocabulary": "/mfe/vocabulary/remoteEntry.js"
 }
