@@ -126,7 +126,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [{ "refId": "A", "expr": "max(likho_jobs_queue_oldest_seconds)", "legendFormat": "waiting" }],
       "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "#E8A33D" }, "custom": { "lineWidth": 2, "fillOpacity": 15, "showPoints": "never" } }, "overrides": [] },
-      "options": { "legend": { "displayMode": "hidden" }, "tooltip": { "mode": "single" } }
+      "options": { "legend": { "showLegend": false, "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single" } }
     },
     {
       "id": 13,
@@ -155,7 +155,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [{ "refId": "A", "expr": "sum(rate(likho_segments_published_total[5m])) * 60", "legendFormat": "lines" }],
       "fieldConfig": { "defaults": { "unit": "none", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "#5B5BD6" }, "custom": { "lineWidth": 2, "fillOpacity": 15, "showPoints": "never" } }, "overrides": [] },
-      "options": { "legend": { "displayMode": "hidden" }, "tooltip": { "mode": "single" } }
+      "options": { "legend": { "showLegend": false, "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single" } }
     },
     {
       "id": 20,
