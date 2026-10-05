@@ -17,7 +17,7 @@
       "description": "Queued jobs: a worker has not taken them yet.",
       "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "refId": "A", "expr": "sum(likho_jobs{status=\"queued\"})", "instant": true }],
+      "targets": [{ "refId": "A", "expr": "max(likho_jobs{status=\"queued\"})", "instant": true }],
       "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#E8A33D" } }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
     },
@@ -27,7 +27,7 @@
       "title": "Jobs running",
       "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "refId": "A", "expr": "sum(likho_jobs{status=\"running\"})", "instant": true }],
+      "targets": [{ "refId": "A", "expr": "max(likho_jobs{status=\"running\"})", "instant": true }],
       "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#5B5BD6" } }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
     },
@@ -85,9 +85,10 @@
       "id": 10,
       "type": "timeseries",
       "title": "Jobs by status",
+      "description": "Counted in the database, so every likho-api instance reports the same number: max, not sum (a sum would double it for a few minutes after a restart as well).",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "refId": "A", "expr": "sum by (status) (likho_jobs)", "legendFormat": "{{status}}" }],
+      "targets": [{ "refId": "A", "expr": "max by (status) (likho_jobs)", "legendFormat": "{{status}}" }],
       "fieldConfig": {
         "defaults": { "unit": "none", "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
         "overrides": [
@@ -162,7 +163,7 @@
       "title": "Media by status (likho-media)",
       "gridPos": { "x": 0, "y": 19, "w": 8, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "refId": "A", "expr": "sum by (status) (likho_media)", "legendFormat": "{{status}}" }],
+      "targets": [{ "refId": "A", "expr": "max by (status) (likho_media)", "legendFormat": "{{status}}" }],
       "fieldConfig": {
         "defaults": { "unit": "none", "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
         "overrides": [
