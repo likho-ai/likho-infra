@@ -37,6 +37,11 @@ On Linux or macOS: `bash scripts/up.sh` and `bash scripts/smoke.sh`.
 Measured on 2026-10-01: the seven always-on containers use about **300 MB** of memory when idle.
 The observability container adds about 1 GB, so it is a separate profile.
 
+Every service serves its metrics at `GET /metrics` (Prometheus text) and pushes them to Grafana
+when started with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`. The dashboard **Likho -
+jobs and services** (`grafana/dashboards`, provisioned into the container) shows the job queue,
+how fast transcription runs, failures and sweeps, media, events and searches.
+
 Ports 8080, 5433 and 6380 are used instead of 80, 5432 and 6379 because IIS, a local
 PostgreSQL and a local Redis already hold those on the development machine. Change any port
 in `.env.development.local` (same keys as `.env.development`).

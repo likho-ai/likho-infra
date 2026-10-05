@@ -143,6 +143,9 @@ services:
     entrypoint: ["sh", "/buckets.sh"]
     restart: "no"
 
+  # Grafana with Prometheus, Loki and Tempo behind it. The services push their metrics here when
+  # OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 is set; the Likho dashboards come from
+  # grafana/dashboards. Anonymous admin access, for the local machine only.
   otel-lgtm:
     profiles: [obs, platform]
     image: grafana/otel-lgtm:0.34.0
@@ -150,6 +153,9 @@ services:
     networks: [likho]
     restart: unless-stopped
     mem_limit: 1200m
+    volumes:
+      - ./grafana/provisioning/dashboards/likho.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/likho.yaml:ro
+      - ./grafana/dashboards:/otel-lgtm/grafana-dashboards/likho:ro
 
 networks:
   likho:

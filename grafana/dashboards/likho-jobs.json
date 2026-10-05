@@ -1,0 +1,213 @@
+{
+  "uid": "likho-jobs",
+  "title": "Likho - jobs and services",
+  "tags": ["likho"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Jobs waiting",
+      "description": "Queued jobs: a worker has not taken them yet.",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum(likho_jobs{status=\"queued\"})", "instant": true }],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#E8A33D" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Jobs running",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum(likho_jobs{status=\"running\"})", "instant": true }],
+      "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#5B5BD6" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Oldest waiting job",
+      "description": "How long the oldest queued job has waited. The sweeper asks for a job again after JOB_QUEUED_MAX_MINUTES.",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "max(likho_jobs_queue_oldest_seconds)", "instant": true }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "#2E9E6B", "value": null }, { "color": "#E8A33D", "value": 300 }, { "color": "#D9534F", "value": 900 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Realtime factor (median, 30 min)",
+      "description": "Audio seconds transcribed per second of wall-clock time; 1 = real time.",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "histogram_quantile(0.5, sum by (le) (rate(likho_job_realtime_factor_bucket[30m])))", "instant": true }],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 2, "color": { "mode": "fixed", "fixedColor": "#2E9E6B" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Jobs failed (1 h)",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum(increase(likho_jobs_finished_total{status=\"failed\"}[1h]))", "instant": true }],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 0, "color": { "mode": "fixed", "fixedColor": "#D9534F" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Sweeps (1 h)",
+      "description": "Stuck or stalled jobs the sweeper asked for again or failed.",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (outcome) (increase(likho_job_sweeps_total[1h]))", "legendFormat": "{{outcome}}", "instant": true }],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 0, "color": { "mode": "fixed", "fixedColor": "#E8A33D" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "textMode": "value_and_name" }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Jobs by status",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (status) (likho_jobs)", "legendFormat": "{{status}}" }],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "queued" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E8A33D" } }] },
+          { "matcher": { "id": "byName", "options": "running" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5B5BD6" } }] },
+          { "matcher": { "id": "byName", "options": "done" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }] },
+          { "matcher": { "id": "byName", "options": "failed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#D9534F" } }] },
+          { "matcher": { "id": "byName", "options": "cancelled" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8A8A9A" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Jobs finished per minute, by outcome",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (status) (rate(likho_jobs_finished_total[5m])) * 60", "legendFormat": "{{status}}" }],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 2, "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "done" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }] },
+          { "matcher": { "id": "byName", "options": "failed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#D9534F" } }] },
+          { "matcher": { "id": "byName", "options": "cancelled" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8A8A9A" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Oldest waiting job",
+      "gridPos": { "x": 0, "y": 12, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "max(likho_jobs_queue_oldest_seconds)", "legendFormat": "waiting" }],
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "#E8A33D" }, "custom": { "lineWidth": 2, "fillOpacity": 15, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "hidden" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Realtime factor of the worker (median and 90th)",
+      "gridPos": { "x": 8, "y": 12, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.5, sum by (le) (rate(likho_job_realtime_factor_bucket[30m])))", "legendFormat": "median" },
+        { "refId": "B", "expr": "histogram_quantile(0.9, sum by (le) (rate(likho_job_realtime_factor_bucket[30m])))", "legendFormat": "90th" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 2, "custom": { "lineWidth": 2, "fillOpacity": 0, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "median" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }] },
+          { "matcher": { "id": "byName", "options": "90th" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5B5BD6" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Lines transcribed per minute",
+      "gridPos": { "x": 16, "y": 12, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum(rate(likho_segments_published_total[5m])) * 60", "legendFormat": "lines" }],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 1, "color": { "mode": "fixed", "fixedColor": "#5B5BD6" }, "custom": { "lineWidth": 2, "fillOpacity": 15, "showPoints": "never" } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "hidden" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Media by status (likho-media)",
+      "gridPos": { "x": 0, "y": 19, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (status) (likho_media)", "legendFormat": "{{status}}" }],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "uploaded" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E8A33D" } }] },
+          { "matcher": { "id": "byName", "options": "ready" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }] },
+          { "matcher": { "id": "byName", "options": "failed" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#D9534F" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Events handled per minute (likho-api), by outcome",
+      "gridPos": { "x": 8, "y": 19, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "refId": "A", "expr": "sum by (outcome) (rate(likho_events_handled_total[5m])) * 60", "legendFormat": "{{outcome}}" }],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 1, "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "ok" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }] },
+          { "matcher": { "id": "byName", "options": "retry" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#E8A33D" } }] },
+          { "matcher": { "id": "byName", "options": "dropped" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#D9534F" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Searches per minute and their median time (likho-search)",
+      "gridPos": { "x": 16, "y": 19, "w": 8, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(likho_search_requests_total{method=\"Search\"}[5m])) * 60", "legendFormat": "searches / min" },
+        { "refId": "B", "expr": "histogram_quantile(0.5, sum by (le) (rate(likho_search_request_seconds_bucket{method=\"Search\"}[10m])))", "legendFormat": "median seconds" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 2, "custom": { "lineWidth": 2, "fillOpacity": 0, "showPoints": "never" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "searches / min" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5B5BD6" } }] },
+          { "matcher": { "id": "byName", "options": "median seconds" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2E9E6B" } }, { "id": "unit", "value": "s" }, { "id": "custom.axisPlacement", "value": "right" }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

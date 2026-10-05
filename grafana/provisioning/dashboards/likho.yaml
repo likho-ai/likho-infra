@@ -1,0 +1,11 @@
+# Grafana reads the Likho dashboards from the folder mounted at /otel-lgtm/grafana-dashboards/likho.
+apiVersion: 1
+
+providers:
+  - name: "Likho"
+    folder: "Likho"
+    type: file
+    allowUiUpdates: true
+    options:
+      path: /otel-lgtm/grafana-dashboards/likho
+      foldersFromFilesStructure: false
