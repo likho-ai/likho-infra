@@ -21,6 +21,15 @@ Docker Desktop must be running.
 
 On Linux or macOS: `bash scripts/up.sh` and `bash scripts/smoke.sh`.
 
+Then the application itself, every service and web app in a window of its own (the repositories
+side by side with this one):
+
+```powershell
+.\dev.ps1              # starts whatever is not running yet; open http://localhost:8080
+.\dev.ps1 status       # which parts run
+.\dev.ps1 stop         # closes the windows it opened
+```
+
 ## What runs
 
 | Service | Image | Address on this machine | Used by |
