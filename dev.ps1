@@ -29,12 +29,12 @@ $parts = @(
   @{ Name = 'likho-analytics';       Port = 4070; Dir = 'likho-analytics';       Run = 'go run ./cmd/likho-analytics' },
   @{ Name = 'likho-api';             Port = 4000; Dir = 'likho-api';             Run = "$pnpm build; node dist/main.js" },
   @{ Name = 'likho-connector-ameyo'; Port = 4060; Dir = 'likho-connector-ameyo'; Run = "$pnpm build; node dist/cli.js serve" },
-  @{ Name = 'web-shell';             Port = 5173; Dir = 'likho-web-shell';       Run = "$pnpm exec vite --port 5173 --strictPort" },
-  @{ Name = 'app-library';           Port = 5174; Dir = 'likho-mfe-library';     Run = "$pnpm exec vite --port 5174 --strictPort" },
-  @{ Name = 'app-transcript';        Port = 5175; Dir = 'likho-mfe-transcript';  Run = "$pnpm exec vite --port 5175 --strictPort" },
-  @{ Name = 'app-admin';             Port = 5176; Dir = 'likho-mfe-admin';       Run = "$pnpm exec vite --port 5176 --strictPort" },
-  @{ Name = 'app-vocabulary';        Port = 5177; Dir = 'likho-mfe-vocabulary';  Run = "$pnpm exec vite --port 5177 --strictPort" },
-  @{ Name = 'app-insights';          Port = 5178; Dir = 'likho-mfe-insights';    Run = "$pnpm exec vite --port 5178 --strictPort" }
+  @{ Name = 'web-shell';             Port = 5273; Dir = 'likho-web-shell';       Run = "$pnpm exec vite --port 5273 --strictPort" },
+  @{ Name = 'app-library';           Port = 5274; Dir = 'likho-mfe-library';     Run = "$pnpm exec vite --port 5274 --strictPort" },
+  @{ Name = 'app-transcript';        Port = 5275; Dir = 'likho-mfe-transcript';  Run = "$pnpm exec vite --port 5275 --strictPort" },
+  @{ Name = 'app-admin';             Port = 5276; Dir = 'likho-mfe-admin';       Run = "$pnpm exec vite --port 5276 --strictPort" },
+  @{ Name = 'app-vocabulary';        Port = 5277; Dir = 'likho-mfe-vocabulary';  Run = "$pnpm exec vite --port 5277 --strictPort" },
+  @{ Name = 'app-insights';          Port = 5278; Dir = 'likho-mfe-insights';    Run = "$pnpm exec vite --port 5278 --strictPort" }
 )
 
 function Test-Port([int]$Port) {

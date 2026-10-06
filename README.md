@@ -97,7 +97,7 @@ consumers are documented in `likho-contracts/streams.yaml`.
 | --- | --- |
 | `/graphql`, `/api/`, `/events/` | likho-api on host port 4000 (`/events/` is not buffered, for live lines) |
 | `/media/` | likho-media on host port 4010 (uploads up to 1 GB, range requests) |
-| `/` | the web shell on host port 5173 |
+| `/` | the web shell on host port 5273 |
 | `/healthz` | the gateway itself |
 
 A path whose service is not running answers `502` with a JSON error body.
