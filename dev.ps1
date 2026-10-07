@@ -27,6 +27,7 @@ $parts = @(
   @{ Name = 'likho-search';          Port = 4040; Dir = 'likho-search';          Run = 'go run ./cmd/likho-search' },
   @{ Name = 'likho-insights';        Port = 4050; Dir = 'likho-insights';        Run = 'uv run likho-insights' },
   @{ Name = 'likho-analytics';       Port = 4070; Dir = 'likho-analytics';       Run = 'go run ./cmd/likho-analytics' },
+  @{ Name = 'likho-ml';              Port = 4080; Dir = 'likho-ml';              Run = 'uv run likho-ml' },
   @{ Name = 'likho-api';             Port = 4000; Dir = 'likho-api';             Run = "$pnpm build; node dist/main.js" },
   @{ Name = 'likho-connector-ameyo'; Port = 4060; Dir = 'likho-connector-ameyo'; Run = "$pnpm build; node dist/cli.js serve" },
   @{ Name = 'web-shell';             Port = 5273; Dir = 'likho-web-shell';       Run = "$pnpm exec vite --port 5273 --strictPort" },
