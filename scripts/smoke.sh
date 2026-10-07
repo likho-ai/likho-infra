@@ -22,7 +22,7 @@ echo "gateway"
 curl -s "http://localhost:${GATEWAY_PORT}/api/v1/ping" | grep -q service_unavailable && pass "a path with no service answers a JSON 502" || fail "gateway error body"
 
 echo "postgres"
-for db in likho_api likho_media likho_language; do
+for db in likho_api likho_media likho_language likho_ml; do
   [ "$(psql_as "$db" "$db" 'select current_database()')" = "$db" ] && pass "$db: own login works" || fail "$db login"
 done
 psql_as likho_api likho_media 'select 1' >/dev/null 2>&1 && fail "likho_api can read likho_media" || pass "one service cannot open another service's database"
