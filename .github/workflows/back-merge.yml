@@ -1,0 +1,44 @@
+# After main changes on its own (a release commit, a hotfix), open a pull request that merges
+# main back into development, so the next promotion does not conflict and development carries
+# the released version and changelog. Promotions (merge commits of staging) alone do not start
+# one: only commits on main that development lacks, merges aside.
+#
+# Reusable, and this repository's own. Caller (.github/workflows/back-merge.yml):
+#   on: { push: { branches: [main] } }
+#   jobs: { back-merge: { uses: likho-ai/likho-infra/.github/workflows/back-merge.yml@main, permissions: { contents: read, pull-requests: write } } }
+#
+# Needs the organisation's "Allow GitHub Actions to create and approve pull requests". The pull
+# request is opened by a bot, so CI does not run on it: an admin merges it (merge commit).
+name: back-merge
+
+on:
+  workflow_call:
+    inputs:
+      target: { type: string, default: development }
+  push:
+    branches: [main]
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Open the pull request main -> development when main has something of its own
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ inputs.target || 'development' }}
+        run: |
+          set -eu
+          git fetch -q origin "$TARGET" || { echo "no $TARGET branch"; exit 0; }
+          own=$(git log --no-merges --oneline "origin/$TARGET..origin/main")
+          if [ -z "$own" ]; then echo "main has nothing $TARGET lacks"; exit 0; fi
+          if [ -n "$(gh pr list --base "$TARGET" --head main --state open --json number --jq '.[].number')" ]; then
+            echo "a back-merge pull request is already open"; exit 0
+          fi
+          printf 'main has commits that %s lacks (a release or a hotfix):\n\n```\n%s\n```\n\nMerge with a merge commit.\n' "$TARGET" "$own" > body.md
+          gh pr create --base "$TARGET" --head main --title "chore: back-merge main into $TARGET" --body-file body.md
