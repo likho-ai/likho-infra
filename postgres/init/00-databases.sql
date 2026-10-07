@@ -1,16 +1,20 @@
 -- One database and one login per service. No service reads another service's tables.
 -- Local development passwords only; real environments take them from secrets.
-CREATE ROLE likho_api      LOGIN PASSWORD 'likho_api';
-CREATE ROLE likho_media    LOGIN PASSWORD 'likho_media';
-CREATE ROLE likho_language LOGIN PASSWORD 'likho_language';
-CREATE ROLE likho_connector LOGIN PASSWORD 'likho_connector';
+--
+-- Safe to run again: PostgreSQL runs it on the first start of an empty volume, and
+-- scripts/up.sh runs it on every start, so a service added later gets its database on a
+-- stack that already has data.
 
-CREATE DATABASE likho_api      OWNER likho_api;
-CREATE DATABASE likho_media    OWNER likho_media;
-CREATE DATABASE likho_language OWNER likho_language;
-CREATE DATABASE likho_connector OWNER likho_connector;
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', name, name)
+FROM unnest(ARRAY['likho_api', 'likho_media', 'likho_language', 'likho_connector', 'likho_ml']) AS name
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = name)
+\gexec
 
-REVOKE CONNECT ON DATABASE likho_api      FROM PUBLIC;
-REVOKE CONNECT ON DATABASE likho_media    FROM PUBLIC;
-REVOKE CONNECT ON DATABASE likho_language FROM PUBLIC;
-REVOKE CONNECT ON DATABASE likho_connector FROM PUBLIC;
+SELECT format('CREATE DATABASE %I OWNER %I', name, name)
+FROM unnest(ARRAY['likho_api', 'likho_media', 'likho_language', 'likho_connector', 'likho_ml']) AS name
+WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = name)
+\gexec
+
+SELECT format('REVOKE CONNECT ON DATABASE %I FROM PUBLIC', name)
+FROM unnest(ARRAY['likho_api', 'likho_media', 'likho_language', 'likho_connector', 'likho_ml']) AS name
+\gexec
