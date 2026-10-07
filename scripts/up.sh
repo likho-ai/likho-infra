@@ -9,8 +9,9 @@ export COMPOSE_ENV_FILES=".env.development$( [ -f .env.development.local ] && ec
 
 docker compose --profile infra up -d --wait
 # The databases and logins of every service: created if missing (a stack started before a
-# service existed gets its database now).
-docker compose exec -T postgres psql -q -U postgres -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/00-databases.sql
+# service existed gets its database now). The file goes in on stdin, so Git Bash on Windows has
+# no container path to rewrite.
+docker compose exec -T postgres psql -q -U postgres -v ON_ERROR_STOP=1 < postgres/init/00-databases.sql
 docker compose --profile infra --profile init run --rm init-nats
 docker compose --profile infra --profile init run --rm init-objectstore
 echo "stack is up"

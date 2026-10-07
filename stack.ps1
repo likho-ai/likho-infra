@@ -25,6 +25,10 @@ function Start-Stack([string[]]$Profiles) {
   # Long-running services first; "up --wait" fails if a one-shot job exits, so those run afterwards.
   docker compose @Profiles up -d --wait
   if ($LASTEXITCODE -ne 0) { throw 'The stack did not become healthy. Run: .\stack.ps1 logs' }
+  # Every service's database and login, created if missing (a stack started before a service
+  # existed gets its database now). The file goes in on stdin: no path to translate.
+  Get-Content -Raw postgres/init/00-databases.sql | docker compose exec -T postgres psql -q -U postgres -v ON_ERROR_STOP=1
+  if ($LASTEXITCODE -ne 0) { throw 'Creating the databases failed.' }
   foreach ($job in 'init-nats', 'init-objectstore') {
     docker compose --profile infra --profile init run --rm $job
     if ($LASTEXITCODE -ne 0) { throw "Setup job $job failed." }
