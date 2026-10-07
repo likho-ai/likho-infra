@@ -19,6 +19,10 @@ on:
     branches: [main, staging, development]
     types: [opened, synchronize, reopened, edited]
 
+# The workflow's token reads the code and nothing more; a job that needs more says so itself.
+permissions:
+  contents: read
+
 jobs:
   flow:
     runs-on: ubuntu-latest
