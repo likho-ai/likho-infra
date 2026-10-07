@@ -6,6 +6,17 @@ on:
   pull_request:
 
 jobs:
+  # The reusable workflows here run in every Likho repository: a mistake in one breaks all of them.
+  workflows:
+    name: Lint the workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: actionlint
+        run: |
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
+
   stack:
     name: Start the stack and run the smoke test
     runs-on: ubuntu-latest
