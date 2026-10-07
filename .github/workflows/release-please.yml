@@ -1,0 +1,46 @@
+# Reusable: release-please keeps a release pull request open on main - the next version, worked
+# out from the commit titles since the last release (fix: = patch, feat: = minor, feat!: or
+# BREAKING CHANGE = major, before 1.0 a breaking change is a minor) and the changelog. Merging
+# it tags the version and makes the GitHub release; the caller then builds what the release ships.
+#
+# The repository holds release-please-config.json and .release-please-manifest.json (the
+# current version). Caller:
+#   on: { push: { branches: [main] } }
+#   jobs:
+#     release-please:
+#       uses: likho-ai/likho-infra/.github/workflows/release-please.yml@main
+#       permissions: { contents: write, pull-requests: write }
+#     image:
+#       needs: release-please
+#       if: needs.release-please.outputs.release_created == 'true'
+#       uses: likho-ai/likho-infra/.github/workflows/docker-publish.yml@main
+#       with: { version: "${{ needs.release-please.outputs.version }}" }
+#       permissions: { contents: read, packages: write }
+#
+# Tags made with the workflow's own token start no other workflow, which is why the caller
+# builds the release in the same run instead of on the tag.
+name: release-please
+
+on:
+  workflow_call:
+    outputs:
+      release_created: { value: "${{ jobs.release-please.outputs.release_created }}" }
+      tag_name: { value: "${{ jobs.release-please.outputs.tag_name }}" }
+      version: { value: "${{ jobs.release-please.outputs.version }}" }
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -1,4 +1,5 @@
 # Reusable: build the repository's Dockerfile and push it to GitHub Container Registry.
+# A release builds it again with `version` (see release-please.yml).
 # Caller (after its ci job, on main only):
 #   publish:
 #     needs: ci
@@ -14,6 +15,8 @@ on:
       image: { type: string, default: "" }   # default: ghcr.io/<owner>/<repo>
       file: { type: string, default: "" }    # default: <context>/Dockerfile
       suffix: { type: string, default: "" }  # added to every tag: "-cuda" gives latest-cuda, sha-…-cuda
+      # A release (release-please.yml): also tag the image 1.2.3 and 1.2. Empty: the pushed tag, if any.
+      version: { type: string, default: "" }
 
 jobs:
   publish:
@@ -36,7 +39,8 @@ jobs:
           tags: |
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
           flavor: |
             suffix=${{ inputs.suffix }},onlatest=true
       - uses: docker/build-push-action@v6
