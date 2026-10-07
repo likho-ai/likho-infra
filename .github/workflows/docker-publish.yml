@@ -12,6 +12,8 @@ on:
     inputs:
       context: { type: string, default: "." }
       image: { type: string, default: "" }   # default: ghcr.io/<owner>/<repo>
+      file: { type: string, default: "" }    # default: <context>/Dockerfile
+      suffix: { type: string, default: "" }  # added to every tag: "-cuda" gives latest-cuda, sha-…-cuda
 
 jobs:
   publish:
@@ -35,11 +37,15 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
+          flavor: |
+            suffix=${{ inputs.suffix }},onlatest=true
       - uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.context }}
+          file: ${{ inputs.file != '' && inputs.file || format('{0}/Dockerfile', inputs.context) }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # One cache per Dockerfile, so the CPU and GPU builds do not evict each other.
+          cache-from: type=gha,scope=${{ inputs.suffix != '' && format('buildkit{0}', inputs.suffix) || 'buildkit' }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.suffix != '' && format('buildkit{0}', inputs.suffix) || 'buildkit' }}
