@@ -14,7 +14,7 @@ Writes, next to this repository (the D:\\likho layout):
     likho-connector-ameyo/.env.<env>.local  DATABASE_URL, and placeholders for the API key and the dialer
     likho-insights/.env.<env>.local         MONGO_URL, and a placeholder for the model's key (empty = insights off)
     likho-analytics/.env.<env>.local        CLICKHOUSE_URL
-    likho-ml/.env.<env>.local               DATABASE_URL
+    likho-ml/.env.<env>.local               DATABASE_URL, S3 keys (the models bucket)
 
 The files are ignored by git. likho-deploy turns them into Kubernetes Secrets (scripts/secrets.py
 there); its stack chart creates the database users with these passwords on first start. Two values cannot be invented and are
@@ -159,7 +159,9 @@ def main() -> int:
     )
     files["likho-ml"].write_text(
         head
-        + f"DATABASE_URL=postgresql+asyncpg://likho_ml:{values['LIKHO_ML_DB_PASSWORD']}@postgres:5432/likho_ml\n",
+        + f"DATABASE_URL=postgresql+asyncpg://likho_ml:{values['LIKHO_ML_DB_PASSWORD']}@postgres:5432/likho_ml\n"
+        + f"S3_ACCESS_KEY={values['S3_ACCESS_KEY']}\n"
+        + f"S3_SECRET_KEY={values['S3_SECRET_KEY']}\n",
         encoding="utf-8",
         newline="\n",
     )
