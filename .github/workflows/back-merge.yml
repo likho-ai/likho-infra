@@ -40,5 +40,13 @@ jobs:
           if [ -n "$(gh pr list --base "$TARGET" --head main --state open --json number --jq '.[].number')" ]; then
             echo "a back-merge pull request is already open"; exit 0
           fi
-          printf 'main has commits that %s lacks (a release or a hotfix):\n\n```\n%s\n```\n\nMerge with a merge commit.\n' "$TARGET" "$own" > body.md
+          {
+            echo "main has commits that $TARGET lacks (a release or a hotfix):"
+            echo
+            echo "~~~"
+            echo "$own"
+            echo "~~~"
+            echo
+            echo "Merge with a merge commit."
+          } > body.md
           gh pr create --base "$TARGET" --head main --title "chore: back-merge main into $TARGET" --body-file body.md
