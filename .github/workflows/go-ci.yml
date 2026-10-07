@@ -36,6 +36,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: ${{ inputs.go-version-file }}
+      - name: Formatted with gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "::error::not gofmt-formatted (run gofmt -w .):"; echo "$unformatted"; exit 1; fi
       - run: go vet ./...
       - uses: golangci/golangci-lint-action@v9
         with:
