@@ -1,0 +1,49 @@
+# A pull request must follow the branch model, or this check fails (it is required on
+# development, staging and main):
+#
+#   feature branches (feat/…, fix/…, …)  ->  development   (squash)
+#   development                          ->  staging       (merge commit)
+#   staging                              ->  main          (merge commit; main is production)
+#   hotfix/…                             ->  main or staging, then back into development
+#   main                                 ->  staging or development (back-merges after a release)
+#   release-please--…                    ->  main          (the release pull request)
+#
+# Reusable, and this repository's own check. Caller (.github/workflows/branch-flow.yml):
+#   on: { pull_request: { branches: [main, staging, development], types: [opened, synchronize, reopened, edited] } }
+#   jobs: { flow: { uses: likho-ai/likho-infra/.github/workflows/branch-flow.yml@main } }
+name: branch-flow
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main, staging, development]
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: The pull request goes the right way
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          ok=""
+          case "$BASE" in
+            main)
+              case "$HEAD" in staging|hotfix/*|release-please--*) ok=1 ;; esac
+              want="staging, hotfix/… or the release pull request" ;;
+            staging)
+              case "$HEAD" in development|main|hotfix/*) ok=1 ;; esac
+              want="development (or main / hotfix/… for a back-merge)" ;;
+            development)
+              case "$HEAD" in staging) ok="" ;; *) ok=1 ;; esac
+              want="a feature branch (feat/…, fix/…) or main for a back-merge" ;;
+            *) ok=1 ;;
+          esac
+          if [ -z "$ok" ]; then
+            echo "::error::$HEAD -> $BASE is not allowed. Into $BASE come: $want."
+            echo "The way to production is feature -> development -> staging -> main (CONTRIBUTING.md)."
+            exit 1
+          fi
+          echo "$HEAD -> $BASE: allowed"

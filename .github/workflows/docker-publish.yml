@@ -1,9 +1,10 @@
 # Reusable: build the repository's Dockerfile and push it to GitHub Container Registry.
 # A release builds it again with `version` (see release-please.yml).
-# Caller (after its ci job, on main only):
+# Tags: sha-<commit>, the branch (development, staging, main), latest from main only.
+# Caller (after its ci job, on a push to development, staging or main):
 #   publish:
 #     needs: ci
-#     if: github.ref == 'refs/heads/main'
+#     if: github.event_name == 'push'
 #     uses: likho-ai/likho-infra/.github/workflows/docker-publish.yml@main
 #     permissions: { contents: read, packages: write }
 name: docker-publish
@@ -38,7 +39,8 @@ jobs:
           images: ${{ inputs.image != '' && inputs.image || format('ghcr.io/{0}', github.repository) }}
           tags: |
             type=sha,format=long
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=semver,pattern={{version}},value=${{ inputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.version }}
           flavor: |
